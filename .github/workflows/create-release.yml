@@ -22,13 +22,15 @@ jobs:
           git config user.email ${{ github.actor }}@users.noreply.github.com
       - name: Bump version in package.json
         run: yarn version --new-version ${{ env.RELEASE_VERSION }} --no-git-tag-version
-      - name: Commit package.json
-        id: make-commit
-        run: |
-          git add package.json
-          git commit --message "Bump to version ${{ env.RELEASE_VERSION }}"
-          echo "::set-output name=commit::$(git rev-parse HEAD)"
-      - name: Push changes
-        run: git push origin ${{ env.RELEASE_TYPE }}/${{ env.RELEASE_VERSION }}
+      - name: Create Pull Request
+        id: pull-request-master
+        uses: peter-evans/create-pull-request@v2
+        with:
+          title: ${{ env.RELEASE_TYPE }}/${{ env.RELEASE_VERSION }}
+          commit-message: Bump to version ${{ env.RELEASE_TYPE }}/${{ env.RELEASE_VERSION }}
+          committer: GitHub <noreply@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          base: master
+          draft: false
 
       
