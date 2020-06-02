@@ -37,7 +37,6 @@ jobs:
           title: ${{ env.RELEASE_TYPE }}/${{ env.RELEASE_VERSION }}
           committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-          branch: ${{ env.RELEASE_TYPE }}/${{ env.RELEASE_VERSION }}
           base: master
           draft: false
 
