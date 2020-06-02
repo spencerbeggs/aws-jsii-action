@@ -1,0 +1,106 @@
+on:
+  push:
+    tags:
+      - 'v*'
+name: Create release
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.meta.outputs.repo }}
+      tag: ${{ steps.meta.outputs.tag }}
+      package_name: ${{ steps.meta.outputs.package_name }}
+      zip_file: ${{ steps.meta.outputs.zip_file }}
+      tar_file: ${{ steps.meta.outputs.tar_file }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Extract meta
+        id: meta
+        shell: bash
+        run: |
+          REPO=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}')
+          TAG=$(echo ${GITHUB_REF#refs/tags/})
+          PACKAGE="$REPO-$TAG"
+          echo ::set-output name=repo::"$REPO"
+          echo ::set-output name=tag::"$TAG"
+          echo ::set-output name=package_name::"$PACKAGE"
+          echo ::set-output name=zip_file::"$PACKAGE.zip"
+          echo ::set-output name=tar_file::"$PACKAGE.tar.gz"
+      - name: Cache .yarn
+        id: cache-yarn
+        uses: actions/cache@v2
+        with:
+          path: .yarn
+          key: .yarn
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node_modules
+      - run: yarn install --production=false
+      - run: yarn build
+      - uses: actions/upload-artifact@v2
+        id: upload-zip
+        with:
+          name: ${{ steps.meta.outputs.zip_file }}
+          path: ${{ github.workspace }}/release/archive.zip
+      - uses: actions/upload-artifact@v2
+        id: upload-tar
+        with:
+          name: ${{ steps.meta.outputs.tar_file }}
+          path: ${{ github.workspace }}/release/archive.tar.gz
+      - uses: actions/upload-artifact@v2
+        id: upload-release
+        with:
+          name: release
+          path: ${{ github.workspace }}/release/
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: v${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: false
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with: 
+          name: release
+          path: artifacts
+      - name: Upload zip to release
+        id: upload-zip-to-release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/artifacts/archive.zip
+          asset_name: ${{ needs.build.outputs.zip_file }}
+          asset_content_type: application/zip
+      - name: Upload tar to release
+        id: upload-tar-to-release 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/artifacts/archive.tar.gz
+          asset_name: ${{ needs.build.outputs.tar_file }}
+          asset_content_type: application/x-gzip

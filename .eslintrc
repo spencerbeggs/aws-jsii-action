@@ -1,0 +1,59 @@
+{
+    "parser": "babel-eslint",
+    "env": {
+      "node": true,
+      "es6": true
+    },
+    "rules": {
+      "max-len": [
+        "warn",
+        {
+          "code": 125,
+          "ignoreRegExpLiterals": true,
+          "ignoreTemplateLiterals": true,
+          "ignoreStrings": true,
+          "ignoreUrls": true
+        }
+      ],
+      "no-unused-vars": [
+        "error",
+        {
+          "vars": "all",
+          "args": "after-used",
+          "ignoreRestSiblings": true,
+          "argsIgnorePattern": "err"
+        }
+      ],
+      "quotes": [
+        "error",
+        "double",
+        {
+          "avoidEscape": true,
+          "allowTemplateLiterals": true
+        }
+      ],
+      "no-undef": 2,
+      "no-console": 0,
+      "no-fallthrough": 0,
+      "comma-style": [2, "last"],
+      "sort-imports-es6-autofix/sort-imports-es6": [
+        2,
+        {
+          "ignoreCase": false,
+          "ignoreMemberSort": false,
+          "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
+        }
+      ],
+      "prettier/prettier": ["error", {"comma-dangle": "always"}]
+    },
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "module",
+      "ecmaFeatures": {
+        "jsx": true
+      }
+    },
+    "plugins": ["prettier", "sort-imports-es6-autofix"],
+    "extends": ["plugin:prettier/recommended"]
+  }
+  

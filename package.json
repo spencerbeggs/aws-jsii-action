@@ -1,0 +1,58 @@
+{
+  "name": "aws-jsii-action",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": {
+    "name": "C. Spencer Beggs",
+    "email": "spencer@beg.gs",
+    "url": "https://github.com/spencerbeggs",
+    "organization": false
+  },
+  "repository": {
+    "url": "https://github.com/spencerbeggs/aws-jsii-action.git",
+    "type": "git"
+  },
+  "bugs": {
+    "url": "https://github.com/spencerbeggs/aws-jsii-action/issues"
+  },
+  "homepage": "https://github.com/spencerbeggs/aws-jsii-action#readme",
+  "scripts": {
+    "build": "gulp build",
+    "artifacts": "node index.js",
+    "test": "act --env-file .env -v"
+  },
+  "keywords": [
+    "Actions",
+    "GitHub",
+    "Artifacts",
+    "Download"
+  ],
+  "dependencies": {
+    "@actions/artifact": "^0.3.0",
+    "@actions/core": "^1.2.3",
+    "@actions/glob": "^0.1.0"
+  },
+  "devDependencies": {
+    "@actions/cache": "^0.2.1",
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.2",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.10.1",
+    "@babel/plugin-proposal-optional-chaining": "^7.10.1",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/register": "^7.10.1",
+    "babel-eslint": "^10.1.0",
+    "babel-plugin-lodash": "^3.3.4",
+    "eslint": "^7.1.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "eslint-plugin-sort-imports-es6-autofix": "^0.5.0",
+    "fs-extra": "^9.0.0",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-gzip": "^1.4.2",
+    "gulp-tar": "^3.1.0",
+    "gulp-zip": "^5.0.1",
+    "prettier": "^2.0.5",
+    "prettier-eslint": "^10.1.1"
+  }
+}
