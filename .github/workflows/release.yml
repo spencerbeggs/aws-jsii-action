@@ -1,36 +1,91 @@
+name: "Create Release"
 on:
   push:
-    tags:
-      - 'v*'
-name: Create release
+    branches:
+      - "release/[0-9]+.[0-9]+.[0-9]+"
+      - "hotfix/[0-9]+.[0-9]+.[0-9]+"    
+  create:
+    branches:
+      - "release/[0-9]+.[0-9]+.[0-9]+"
+      - "hotfix/[0-9]+.[0-9]+.[0-9]+"
 jobs:
-  build:
-    name: Build
+  meta:
     runs-on: ubuntu-latest
     outputs:
       repo: ${{ steps.meta.outputs.repo }}
-      tag: ${{ steps.meta.outputs.tag }}
+      type: ${{ steps.meta.outputs.type }}
+      version: ${{ steps.meta.outputs.version }}
       package_name: ${{ steps.meta.outputs.package_name }}
       zip_file: ${{ steps.meta.outputs.zip_file }}
       tar_file: ${{ steps.meta.outputs.tar_file }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
       - name: Extract meta
         id: meta
         shell: bash
         run: |
           REPO=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}')
-          TAG=$(echo ${GITHUB_REF#refs/tags/})
-          PACKAGE="$REPO-$TAG"
+          RELEASE_VERSION=$(echo "$GITHUB_REF" | awk -F / '{print $4}')
+          RELEASE_TYPE=$(echo "$GITHUB_REF" | awk -F / '{print $3}')
+          PACKAGE="$REPO-$RELEASE_VERSION"
           echo ::set-output name=repo::"$REPO"
-          echo ::set-output name=tag::"$TAG"
+          echo ""set-output name=type::"$RELEASE_TYPE"
+          echo ::set-output name=version::"$RELEASE_VERSION"
           echo ::set-output name=package_name::"$PACKAGE"
           echo ::set-output name=zip_file::"$PACKAGE.zip"
           echo ::set-output name=tar_file::"$PACKAGE.tar.gz"
+  init:
+    name: Start a new release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    needs: meta
+    if: github.event_name == 'create'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Initialize git config
+        run: |
+          git config user.name ${{ github.actor }}
+          git config user.email ${{ github.actor }}@users.noreply.github.com
+      - name: Bump version in package.json
+        run: yarn version --new-version ${{ needs.meta.outputs.version }} --no-git-tag-version
+      - name: Commit package.json
+        id: make-commit
+        run: |
+          git add package.json
+          git commit --message "Bump to version ${{ needs.meta.outputs.version }}"
+          echo "::set-output name=commit::$(git rev-parse HEAD)"
+      - name: Push new branch
+        run: git push origin ${{ needs.meta.outputs.type }}/${{ needs.meta.outputs.version }}
+      - name: Create Pull Request
+        id: pull-request-master
+        uses: repo-sync/pull-request@v2
+        with:
+          pr_title: ${{ needs.meta.outputs.type }}/${{ needs.meta.outputs.version }}
+          pr_draft: false
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: v${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: false
+  build:
+    name: Build release
+    runs-on: ubuntu-latest
+    needs: [meta, init]
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
       - name: Cache .yarn
         id: cache-yarn
         uses: actions/cache@v2
@@ -48,7 +103,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         id: upload-zip
         with:
-          name: ${{ steps.meta.outputs.zip_file }}
+          name: ${{ needs.meta.outputs.zip_file }}
           path: ${{ github.workspace }}/release/archive.zip
       - uses: actions/upload-artifact@v2
         id: upload-tar
@@ -60,47 +115,3 @@ jobs:
         with:
           name: release
           path: ${{ github.workspace }}/release/
-  release:
-    name: Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: v${{ github.ref }}
-          body: |
-            Changes in this Release
-            - First Change
-            - Second Change
-          draft: true
-          prerelease: false
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with: 
-          name: release
-          path: artifacts
-      - name: Upload zip to release
-        id: upload-zip-to-release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/artifacts/archive.zip
-          asset_name: ${{ needs.build.outputs.zip_file }}
-          asset_content_type: application/zip
-      - name: Upload tar to release
-        id: upload-tar-to-release 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/artifacts/archive.tar.gz
-          asset_name: ${{ needs.build.outputs.tar_file }}
-          asset_content_type: application/x-gzip
