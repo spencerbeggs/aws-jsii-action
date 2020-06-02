@@ -1,4 +1,4 @@
-name: "Create Release"
+name: "Prepare Release"
 on:
   push:
     branches:

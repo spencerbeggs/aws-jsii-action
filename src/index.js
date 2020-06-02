@@ -5,7 +5,7 @@ const client = artifact.create();
 const { GITHUB_WORKSPACE } = process.env;
 
 async function main() {
-  await Promise.all(
+  return Promise.all(
     ["js", "python", "dotnet", "java"].map(async (type) => {
       try {
         const root = `${GITHUB_WORKSPACE}/dist/${type}`;

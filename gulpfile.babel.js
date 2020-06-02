@@ -3,6 +3,7 @@ import { readJson, remove, writeJson } from "fs-extra";
 import { resolve } from "path";
 import babel from "gulp-babel";
 import gzip from "gulp-gzip";
+import sourcemaps from "gulp-sourcemaps";
 import tar from "gulp-tar";
 import zip from "gulp-zip";
 
@@ -16,16 +17,15 @@ gulp.task("move", () =>
     .pipe(gulp.dest("dist"))
 );
 
-gulp.task("compile", () =>
-  gulp
+gulp.task("compile", async () => {
+  const config = await readJson(makePath(".babelrc"));
+  return gulp
     .src(["src/**/*.js"])
-    .pipe(
-      babel({
-        presets: ["@babel/env"],
-      })
-    )
-    .pipe(gulp.dest("dist"))
-);
+    .pipe(sourcemaps.init())
+    .pipe(babel(config))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest("dist"));
+});
 
 gulp.task("package", async () => {
   const pkg = await readJson(makePath("./package.json"));
