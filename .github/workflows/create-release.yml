@@ -30,6 +30,7 @@ jobs:
           commit-message: Bump to version ${{ env.RELEASE_TYPE }}/${{ env.RELEASE_VERSION }}
           committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          head: ${{ env.RELEASE_TYPE }}/${{ env.RELEASE_VERSION }}
           base: master
           draft: false
 
