@@ -47,7 +47,4 @@ gulp.task("zip", () =>
   gulp.src("dist/*").pipe(zip("archive.zip")).pipe(gulp.dest("release"))
 );
 
-gulp.task(
-  "build",
-  gulp.series(["clean", "move", "package", "compile", "tar", "zip"])
-);
+gulp.task("build", gulp.series(["clean", "move", "package", "compile"]));
