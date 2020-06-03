@@ -126,4 +126,4 @@ jobs:
         id: upload-release
         with:
           name: ${{ steps.meta.outputs.package_name }}
-          path: ${{ github.workspace }}/release/
+          path: ${{ github.workspace }}/artifact/
