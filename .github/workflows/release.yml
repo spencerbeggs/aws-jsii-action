@@ -21,7 +21,7 @@ jobs:
           RELEASE_TAG=$(echo "$GITHUB_REF" | awk -F / '{print $4}')
           echo ::set-output name=type::"$RELEASE_TYPE"
           echo ::set-output name=tag::"$RELEASE_TAG"
-          echo ::set-output name=verstion::"v$RELEASE_TAG"
+          echo ::set-output name=version::"v$RELEASE_TAG"
           echo ::set-output name=branch::"$RELEASE_TYPE/$RELEASE_TAG"
       - name: Create pull request
         id: pull-request-master
