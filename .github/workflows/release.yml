@@ -37,7 +37,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_name: ${{ steps.meta.outputs.version }}
-          tag_name: ${{ steps.meta.outputs.tag }}
+          tag_name: ${{ github.ref }}
           draft: true
           prerelease: true
       - name: Bump version
