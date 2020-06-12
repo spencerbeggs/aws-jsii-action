@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "nhoizey.gremlins",
+      "redhat.vscode-yaml"
+    ]
+  }

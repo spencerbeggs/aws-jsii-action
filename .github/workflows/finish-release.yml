@@ -1,0 +1,71 @@
+name: "Prepare Release"
+on:
+  push:
+    branches:
+      - "release/[0-9]+.[0-9]+.[0-9]+"
+      - "hotfix/[0-9]+.[0-9]+.[0-9]+"    
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.meta.outputs.repo }}
+      type: ${{ steps.meta.outputs.type }}
+      version: ${{ steps.meta.outputs.version }}
+      package_name: ${{ steps.meta.outputs.package_name }}
+      zip_file: ${{ steps.meta.outputs.zip_file }}
+      tar_file: ${{ steps.meta.outputs.tar_file }}
+    steps:
+      - name: Extract meta
+        id: meta
+        shell: bash
+        run: |
+          REPO=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}')
+          RELEASE_VERSION=$(echo "$GITHUB_REF" | awk -F / '{print $4}')
+          RELEASE_TYPE=$(echo "$GITHUB_REF" | awk -F / '{print $3}')
+          PACKAGE="$REPO-$RELEASE_VERSION"
+          echo ::set-output name=repo::"$REPO"
+          echo ""set-output name=type::"$RELEASE_TYPE"
+          echo ::set-output name=version::"$RELEASE_VERSION"
+          echo ::set-output name=package_name::"$PACKAGE"
+          echo ::set-output name=zip_file::"$PACKAGE.zip"
+          echo ::set-output name=tar_file::"$PACKAGE.tar.gz"
+  build:
+    name: Build release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Extract meta
+        id: meta
+        shell: bash
+        run: |
+          REPO=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}')
+          RELEASE_VERSION=$(echo "$GITHUB_REF" | awk -F / '{print $4}')
+          RELEASE_TYPE=$(echo "$GITHUB_REF" | awk -F / '{print $3}')
+          PACKAGE="$REPO-v$RELEASE_VERSION"
+          echo ::set-output name=repo::"$REPO"
+          echo ::set-output name=type::"$RELEASE_TYPE"
+          echo ::set-output name=version::"$RELEASE_VERSION"
+          echo ::set-output name=package_name::"$PACKAGE.zip"
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Cache .yarn
+        id: cache-yarn
+        uses: actions/cache@v2
+        with:
+          path: .yarn
+          key: .yarn
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node_modules
+      - run: yarn install --production=false
+      - run: yarn build
+      - uses: actions/upload-artifact@v2
+        id: upload-release
+        with:
+          name: ${{ steps.meta.outputs.package_name }}
+          path: ${{ github.workspace }}/dist/

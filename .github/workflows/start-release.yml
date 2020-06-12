@@ -1,0 +1,55 @@
+name: "Start release"
+on:
+  create:
+    branches:
+      - "release/[0-9]+.[0-9]+.[0-9]+"
+      - "hotfix/[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  start-release:
+    name: Start a new release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    if: github.event_name == 'create'
+    steps:
+      - name: Extract meta
+        id: meta
+        shell: bash
+        run: |
+          RELEASE_TYPE=$(echo "$GITHUB_REF" | awk -F / '{print $3}')
+          RELEASE_VERSION=$(echo "$GITHUB_REF" | awk -F / '{print $4}')
+          echo ::set-output name=type::"$RELEASE_TYPE"
+          echo ::set-output name=version::"$RELEASE_VERSION"
+          echo ::set-output name=tag::"v$RELEASE_VERSION"
+          echo ::set-output name=branch::"$RELEASE_TYPE/$RELEASE_VERSION"
+      - uses: actions/checkout@v2
+      - name: Initialize git config
+        run: |
+          git config user.name ${{ github.actor }}
+          git config user.email ${{ github.actor }}@users.noreply.github.com
+      - name: Bump version in package.json
+        run: yarn version --new-version ${{ steps.meta.outputs.version }} --no-git-tag-version
+      - name: Commit package.json
+        id: make-commit
+        run: |
+          git add package.json
+          git commit --message "Bump to version ${{ steps.meta.outputs.version }}"
+          echo "::set-output name=commit::$(git rev-parse HEAD)"
+      - name: Push new branch
+        run: git push origin ${{ steps.meta.outputs.branch }}
+      - name: Create Pull Request
+        id: pull-request-master
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pr_title: ${{ steps.meta.outputs.branch }}
+          pr_draft: false
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_name: v${{ steps.meta.outputs.tag }}
+          draft: true
+          prerelease: true

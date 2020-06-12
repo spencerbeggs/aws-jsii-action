@@ -1,0 +1,17 @@
+{
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true,
+      "source.fixAll.tslint": true
+    },
+    "sort-imports.on-save": false,
+    "javascript.validate.enable": false,
+    "terminal.integrated.shellArgs.osx": [],
+    "eslint.options": {
+      "configFile": ".eslintrc"
+    },
+    "deno.enable": false,
+    "yaml.format.enable": true,
+    "yaml.validate": true,
+    "typescript.tsdk": "node_modules/typescript/lib"
+}
