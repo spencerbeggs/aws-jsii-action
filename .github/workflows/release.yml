@@ -4,10 +4,6 @@ on:
     branches:
       - "release/[0-9]+.[0-9]+.[0-9]+"
       - "hotfix/[0-9]+.[0-9]+.[0-9]+"
-  push:
-    branches:
-      - "release/[0-9]+.[0-9]+.[0-9]+"
-      - "hotfix/[0-9]+.[0-9]+.[0-9]+"
 jobs:
   release:
     name: Prepare a release
@@ -27,16 +23,6 @@ jobs:
           echo ::set-output name=version::"$RELEASE_VERSION"
           echo ::set-output name=tag::"v$RELEASE_VERSION"
           echo ::set-output name=branch::"$RELEASE_TYPE/$RELEASE_VERSION"
-      - name: Bump version
-        if: github.event_name == 'create'
-        run: |
-          git config user.name ${{ github.actor }}
-          git config user.email ${{ github.actor }}@users.noreply.github.com
-          yarn version --new-version ${{ steps.meta.outputs.version }} --no-git-tag-version
-          git add package.json
-          git commit --message "Bump to version ${{ steps.meta.outputs.version }}"
-          echo "::set-output name=commit::$(git rev-parse HEAD)"
-          git push origin ${{ steps.meta.outputs.branch }}
       - name: Create pull request
         id: pull-request-master
         uses: repo-sync/pull-request@v2
@@ -53,3 +39,12 @@ jobs:
           release_name: v${{ steps.meta.outputs.tag }}
           draft: true
           prerelease: true
+      - name: Bump version
+        run: |
+          git config user.name ${{ github.actor }}
+          git config user.email ${{ github.actor }}@users.noreply.github.com
+          yarn version --new-version ${{ steps.meta.outputs.version }} --no-git-tag-version
+          git add package.json
+          git commit --message "Bump to version ${{ steps.meta.outputs.version }}"
+          echo "::set-output name=commit::$(git rev-parse HEAD)"
+          git push origin ${{ steps.meta.outputs.branch }}
