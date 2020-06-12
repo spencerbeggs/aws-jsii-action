@@ -17,7 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        id: checkout
+      - name: Get meta
+        id: meta
         shell: bash
         run: |
           RELEASE_TYPE=$(echo "$GITHUB_REF" | awk -F / '{print $3}')
@@ -31,17 +32,17 @@ jobs:
         run: |
           git config user.name ${{ github.actor }}
           git config user.email ${{ github.actor }}@users.noreply.github.com
-          yarn version --new-version ${{ steps.checkout.outputs.version }} --no-git-tag-version
+          yarn version --new-version ${{ steps.meta.outputs.version }} --no-git-tag-version
           git add package.json
-          git commit --message "Bump to version ${{ steps.checkout.outputs.version }}"
+          git commit --message "Bump to version ${{ steps.meta.outputs.version }}"
           echo "::set-output name=commit::$(git rev-parse HEAD)"
-          git push origin ${{ steps.checkout.outputs.branch }}
+          git push origin ${{ steps.meta.outputs.branch }}
       - name: Create pull request
         id: pull-request-master
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          pr_title: ${{ steps.checkout.outputs.branch }}
+          pr_title: ${{ steps.meta.outputs.branch }}
           pr_draft: true
       - name: Create release
         id: create_release
@@ -49,6 +50,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          release_name: v${{ steps.checkout.outputs.tag }}
+          release_name: v${{ steps.meta.outputs.tag }}
           draft: true
           prerelease: true
