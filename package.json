@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "@actions/artifact": "^0.3.2",
-    "@actions/core": "^1.2.4",
+    "@actions/core": "^1.9.1",
     "@actions/glob": "^0.1.0",
     "gulp-sourcemaps": "^2.6.5"
   },
